@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8" ?> 
+<grammar version="1.0" xml:lang="en-US" mode="voice" root="toplevel"
+xmlns="http://www.w3.org/2001/06/grammar" tag-format="semantics/1.0">
+  <rule id="toplevel" scope="public">
+    <one-of>
+      <item> <ruleref uri="#go"/> </item>
+      <item> <ruleref uri="#turn"/> </item>
+    </one-of>
+  </rule>
+
+  <rule id="go">
+	  <item repeat="0-1"> go </item>
+	  <one-of>
+		  <item> forward <tag>out.cmd="forw";</tag></item>
+	      <item> backward <tag>out.cmd="back";</tag></item>
+	  </one-of>
+	  <item repeat="0-1">
+		  <ruleref uri="#distance"/>
+		  <tag>out.param=rules.latest();</tag>
+	  </item>
+	</rule>
+
+  <rule id="turn">
+	  <item repeat="0-1"> turn </item>
+	  <one-of>
+		  <item> left <tag>out.cmd="left";</tag></item>
+	      <item> right <tag>out.cmd="right";</tag></item>
+	  </one-of>
+	  <item repeat="0-1">
+		  <ruleref uri="#angle"/>
+		  <tag>out.param=rules.latest();</tag>
+	  </item>
+  </rule>
+
+  <rule id="angle">
+	  <one-of>
+		  <item> thirty <tag> out.param="30";</tag></item>
+	      <item> fourtyfive <tag> out.param="45";</tag></item>
+	      <item> sixty <tag> out.param="60";</tag></item>
+	      <item> ninety <tag> out.param="90";</tag></item>
+	      <item> around <tag> out.param="180";</tag></item>
+	  </one-of>
+  </rule>
+
+  <rule id="distance">
+	  <one-of>
+		  <item> ten <tag> out.param="10";</tag></item>
+	      <item> twenty <tag> out.param="20";</tag></item>
+	      <item> fifty <tag> out.param="50";</tag></item>
+	      <item> hundred <tag> out.param="100";</tag></item>
+	      <item> one hundred <tag> out.param="100";</tag></item>
+	  </one-of>
+  </rule>
+
+</grammar>

@@ -18,6 +18,9 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.ApplicationModel;
 using Windows.Media.Capture;
+using Windows.UI.Xaml.Shapes;
+using Windows.UI;
+using Windows.UI.Core;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -28,9 +31,63 @@ namespace VoiceDraw
     /// </summary>
     public sealed partial class MainPage : Page
     {
+
+        double x = 10, y = 10;
+        double angle = 0;
+
+        void SetTurtle()
+        {
+            Canvas.SetLeft(Turtle, x);
+            Canvas.SetTop(Turtle, y);
+        }
+
+        async Task Exec(string cmd, double param)
+        {
+            var px = x; var py = y;
+            switch(cmd)
+            {
+                case "forw":
+                    x += param * Math.Sin(Conv(angle));
+                    y += param * Math.Cos(Conv(angle));
+                    await Speak("Going forward");
+                    break;
+                case "back":
+                    x -= param * Math.Sin(Conv(angle));
+                    y -= param * Math.Cos(Conv(angle));
+                    await Speak("Going Back");
+                    break;
+                case "left":
+                    angle += param;
+                    await Speak("Turning left");
+                    break;
+                case "right":
+                    angle -= param;
+                    await Speak("Turning right");
+                    break;
+            }
+            if (px!=x || py!=y)
+            {
+                var P = new Line();
+                P.X1 = px; P.Y1 = py;
+                P.X2 = x; P.Y2 = y;
+                P.Stroke = new SolidColorBrush(Colors.Black);
+                P.StrokeThickness = 1;
+                main.Children.Add(P);
+            }
+            SetTurtle();
+        }
+
+        private double Conv(double angle)
+        {
+            return angle / 180.0 * Math.PI;
+        }
+
         public MainPage()
         {
             this.InitializeComponent();
+            x = CoreWindow.GetForCurrentThread().Bounds.Width / 2;
+            y = CoreWindow.GetForCurrentThread().Bounds.Height / 2;
+            SetTurtle();
         }
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
@@ -39,12 +96,8 @@ namespace VoiceDraw
             await InitializeRecognizer();
         }
 
-        private void button_Click(object sender, RoutedEventArgs e)
-        {
-            
-        }
-
         SpeechRecognizer speechRecognizer;
+        SpeechSynthesizer synth = new SpeechSynthesizer();
 
         private async Task InitializeRecognizer()
         {
@@ -74,6 +127,14 @@ namespace VoiceDraw
             await speechRecognizer.ContinuousRecognitionSession.StartAsync();
         }
 
+        private async Task Speak(string s)
+        {
+            var x = await synth.SynthesizeTextToStreamAsync(s);
+            media.AutoPlay = true;
+            media.SetSource(x, x.ContentType);
+            media.Play();
+        }
+
         private async void SpeechRecognizer_StateChanged(SpeechRecognizer sender, SpeechRecognizerStateChangedEventArgs args)
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
@@ -86,14 +147,21 @@ namespace VoiceDraw
         private async void ContinuousRecognitionSession_ResultGenerated(SpeechContinuousRecognitionSession sender, SpeechContinuousRecognitionResultGeneratedEventArgs args)
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
-                () =>
+                async () =>
                 {
+                    var cmd = args.Result.SemanticInterpretation.Properties["cmd"][0].ToString();
                     var param = "";
                     if (args.Result.SemanticInterpretation.Properties.ContainsKey("param"))
                     {
                         param = args.Result.SemanticInterpretation.Properties["param"][0].ToString();
                     }
-                    stat.Text = args.Result.SemanticInterpretation.Properties["cmd"][0].ToString()+" "+param;
+                    if (param=="")
+                    {
+                        if (cmd == "forw" || cmd == "back") param = "50";
+                        if (cmd == "left" || cmd == "right") param = "90";
+                    }
+                    stat.Text = cmd+" "+param;
+                    await Exec(cmd, double.Parse(param));
                     // "Recognized, conf="+args.Result.Confidence.ToString();
                 });
         }

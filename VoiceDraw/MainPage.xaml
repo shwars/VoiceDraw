@@ -8,9 +8,10 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <StackPanel>
-        <Button x:Name="button" Content="Button" HorizontalAlignment="Left" VerticalAlignment="Top" Click="button_Click"/>
-        <TextBlock x:Name="stat"/>
-        </StackPanel>
+        <MediaElement x:Name="media"/>
+        <Canvas x:Name="main">
+            <Ellipse x:Name="Turtle" Fill="Black" Height="3" Width="3" Margin="-1,-1,0,0"/>
+            <TextBlock x:Name="stat"/>
+        </Canvas>
     </Grid>
 </Page>
